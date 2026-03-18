@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="coverlet.collector" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AMAPI\AMAPI.csproj" />
+    <ProjectReference Include="..\AMUI\AMUI.csproj" />
   </ItemGroup>
 
 </Project>
