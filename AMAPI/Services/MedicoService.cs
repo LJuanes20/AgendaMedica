@@ -1,10 +1,11 @@
 ﻿using AMAPI.Infrastructure;
 using AMAPI.Models;
+using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 
 namespace AMAPI.Services
 {
-    public class MedicoService
+    public class MedicoService : IMedicoService
     {
         private readonly DbContext _dbContext;
         private readonly string _GET_MEDICOS_QUERY = "SELECT m.IdMedico, m.NombreCompleto, m.EspecialidadId, e.Nombre AS Especialidad, e.Duracion FROM dbo.Medico m INNER JOIN dbo.Especialidad e ON m.EspecialidadId = e.IdEspecialidad";

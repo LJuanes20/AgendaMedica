@@ -1,11 +1,11 @@
 ﻿using AMAPI.Infrastructure;
 using AMAPI.Models;
-using Microsoft.AspNetCore.Mvc;
+using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 
 namespace AMAPI.Services
 {
-    public class EspecialidadService
+    public class EspecialidadService : IEspecialidadService
     {
         private readonly DbContext _dbContext;
 

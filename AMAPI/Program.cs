@@ -1,5 +1,6 @@
 using AMAPI.Infrastructure;
 using AMAPI.Services;
+using AMAPI.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,10 +11,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<DbContext>();
-builder.Services.AddScoped<CitasService>();
-builder.Services.AddScoped<MedicoService>();
-builder.Services.AddScoped<PacientesService>();
-builder.Services.AddScoped<EspecialidadService>();
+builder.Services.AddScoped<ICitasService, CitasService>();
+builder.Services.AddScoped<IMedicoService, MedicoService>();
+builder.Services.AddScoped<IPacientesService, PacientesService>();
+builder.Services.AddScoped<IEspecialidadService, EspecialidadService>();
 
 var app = builder.Build();
 

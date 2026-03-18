@@ -1,5 +1,5 @@
 ﻿using AMAPI.Models;
-using AMAPI.Services;
+using AMAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMAPI.Controllers
@@ -8,8 +8,8 @@ namespace AMAPI.Controllers
     [Route("api/[controller]")]
     public class CitasController : ControllerBase
     {
-        private readonly CitasService _citasService;
-        public CitasController(CitasService citasService)
+        private readonly ICitasService _citasService;
+        public CitasController(ICitasService citasService)
         {
             _citasService = citasService;
         }
