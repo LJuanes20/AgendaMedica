@@ -1,0 +1,43 @@
+﻿@page "/pacientes/editar/{id:int}"
+@using AMUI.Models
+@using AMUI.Services
+@inject PacienteService PacienteService
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<h3>Actualizar datos del paciente</h3>
+
+<div class="container">
+    <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Nombre" placeholder="Nombre" />
+    <input type="date" class="form-control mt-2 mb-2" @bind-value="@paciente.FechaNacimiento" placeholder="Fecha de nacimiento" />
+    <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Telefono" placeholder="Teléfono" />
+    <input type="email" class="form-control mt-2 mb-2" @bind-value="@paciente.Correo" placeholder="Correo" />
+</div>
+
+<button class="btn btn-primary" @onclick="ActualizarPaciente">Actualizar</button>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+     private PacienteDto paciente;
+
+    protected override async Task OnInitializedAsync()
+    { 
+        paciente = new PacienteDto();
+        paciente = await PacienteService.GetPacienteByIdAsync(Id);
+    }
+
+    private async Task ActualizarPaciente()
+    {
+        var result = await PacienteService.UpdatePacienteAsync(paciente);
+        var message = result.Completed ? "Paciente actualizado exitosamente." : result.Message;
+        await JSRuntime.InvokeVoidAsync("alert", message);
+        if (result.Completed)
+        {
+            NavigationManager.NavigateTo("/pacientes");
+        }
+    }
+
+}

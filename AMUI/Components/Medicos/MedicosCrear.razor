@@ -1,0 +1,220 @@
+﻿@page "/medico/crear"
+@using AMUI.Models
+@using AMUI.Services
+@inject MedicosService MedicosService
+@inject EspecialidadesService EspecialidadesService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Crear médico</h3>
+
+<div class="container">
+    <input type="text" class="form-control mt-2 mb-2" @bind-value="@medico.Nombre" placeholder="Nombre" />
+
+    <select class="form-control mt-2 mb-2" @onchange="OnSelectEspecialidad">
+        <option value="">Elige una especialidad</option>
+
+        @if (Especialidades is not null)
+        {
+            @foreach (var especialidad in Especialidades)
+            {
+                <option value="@especialidad.Id">@especialidad.Nombre</option>
+            }
+        }
+    </select>
+
+    <div class="mt-2 mb-2">
+        <p>Indica los horarios de trabajo disponibles para la especialidad seleccionada:</p>
+    </div>
+
+    @if (horarios.Any())
+    {
+        <div class="row mt-2 mb-2">
+            @foreach (var ds in diasSemana)
+            {
+                <div class="col">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong>@ds</strong>
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="seleccionar-todo-@ds"
+                                   @onchange="(e) => SeleccionarTodosHorariosDia(ds, e)" />
+                            <label class="form-check-label" style="font-size: small; display:none;" for="seleccionar-todo-@ds">
+                                Seleccionar todo
+                            </label>
+                        </div>
+
+                        <div class="card-body">
+                            @foreach (var horario in horarios)
+                            {
+                                var idCheck = $"{ds}_{horario}".Replace(":", "").Replace(" ", "");
+
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="@idCheck"
+                                           checked="@horariosSeleccionadosPorDia[ds].Contains(horario)"
+                                           @onchange="(e) => OnHorarioSeleccionado(ds, horario, e)" />
+
+                                    <label class="form-check-label" for="@idCheck">
+                                        @horario
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="d-inline-block justify-content-left align-items-center">
+    <button class="btn btn-primary" @onclick="CrearNuevoMedico">Crear</button>
+    <a class="btn btn-danger" href="/medicos">Cancelar</a>
+</div>
+
+@code {
+    private MedicoCreacionDto medico = new MedicoCreacionDto();
+    private List<EspecialidadDto> Especialidades { get; set; } = new();
+    private List<string> horarios = new List<string>();
+    // Nota del desarrollador: Para simplificar, se asume que el médico solo trabaja de lunes a viernes. Esto puede ser configurable en el futuro.
+    private List<string> diasSemana = new List<string> { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes" };
+    private Dictionary<string, HashSet<string>> horariosSeleccionadosPorDia = new();
+    private EspecialidadDto? EspecialidadSeleccionada { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Especialidades = await EspecialidadesService.GetEspecialidadesAsync() ?? new List<EspecialidadDto>();
+
+        foreach (var dia in diasSemana)
+        {
+            horariosSeleccionadosPorDia[dia] = new HashSet<string>();
+        }
+    }
+
+    private async Task CrearNuevoMedico()
+    {
+        medico.Horarios = ConstruirHorariosMedico();
+
+        var result = await MedicosService.CreateMedicoAsync(medico);
+        var message = result.Completed ? "Médico creado exitosamente." : result.Message;
+
+        await JSRuntime.InvokeVoidAsync("alert", message);
+
+        if (result.Completed)
+        {
+            NavigationManager.NavigateTo("/medicos");
+        }
+    }
+
+    private void OnSelectEspecialidad(ChangeEventArgs e)
+    {
+        var valor = e.Value?.ToString();
+
+        if (int.TryParse(valor, out int id))
+        {
+            EspecialidadSeleccionada = Especialidades?
+                .FirstOrDefault(x => x.Id == id);
+
+            if (EspecialidadSeleccionada is not null)
+            {
+                medico.EspecialidadId = EspecialidadSeleccionada.Id;
+                CalcularHorariosDisponibles(EspecialidadSeleccionada.DuracionMinutos);
+
+                foreach (var dia in diasSemana)
+                {
+                    horariosSeleccionadosPorDia[dia].Clear();
+                }
+            }
+        }
+        else
+        {
+            EspecialidadSeleccionada = null;
+            horarios.Clear();
+
+            foreach (var dia in diasSemana)
+            {
+                horariosSeleccionadosPorDia[dia].Clear();
+            }
+        }
+    }
+
+    private void CalcularHorariosDisponibles(int duracionMinutos)
+    {
+        // Nota del desarrollador: Para simplificar, se asume que el horario de trabajo es de 8:00 a 19:00.
+        var horaInicio = new TimeSpan(8, 0, 0);
+        var horaFin = new TimeSpan(19, 0, 0);
+
+        if (horarios is null)
+            horarios = new List<string>();
+
+        horarios.Clear();
+
+        for (var hora = horaInicio; hora.Add(TimeSpan.FromMinutes(duracionMinutos)) <= horaFin; hora = hora.Add(TimeSpan.FromMinutes(duracionMinutos)))
+        {
+            horarios.Add(hora.ToString(@"hh\:mm"));
+        }
+    }
+
+    private void OnHorarioSeleccionado(string dia, string horario, ChangeEventArgs e)
+    {
+        var seleccionado = e.Value is bool b && b;
+
+        if (seleccionado)
+        {
+            horariosSeleccionadosPorDia[dia].Add(horario);
+        }
+        else
+        {
+            horariosSeleccionadosPorDia[dia].Remove(horario);
+        }
+    }
+
+    private List<HorarioMedicoCreacionDto> ConstruirHorariosMedico()
+    {
+        var lista = new List<HorarioMedicoCreacionDto>();
+
+        if (EspecialidadSeleccionada is null)
+            return lista;
+
+        foreach (var dia in diasSemana)
+        {
+            foreach (var hora in horariosSeleccionadosPorDia[dia].OrderBy(d => d))
+            {
+                if (TimeSpan.TryParse(hora, out var horaInicioTime))
+                {
+                    var horaInicio = horaInicioTime;
+                    var horaFin = horaInicio.Add(TimeSpan.FromMinutes(EspecialidadSeleccionada.DuracionMinutos));
+
+                    lista.Add(new HorarioMedicoCreacionDto
+                    {
+                        DiaSemana = dia,
+                        HoraInicio = horaInicio,
+                        HoraFin = horaFin
+                    });
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    private void SeleccionarTodosHorariosDia(string dia, ChangeEventArgs e)
+    {
+        var seleccionar = e.Value is bool b && b;
+        if (seleccionar)
+        {
+            foreach (var horario in horarios)
+            {
+                horariosSeleccionadosPorDia[dia].Add(horario);
+            }
+        }
+        else
+        {
+            horariosSeleccionadosPorDia[dia].Clear();
+        }
+    }
+}

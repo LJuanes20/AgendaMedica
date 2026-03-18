@@ -1,0 +1,248 @@
+﻿@page "/citas/agendar"
+@using AMUI.Models
+@using AMUI.Services
+@inject PacienteService PacientesService
+@inject MedicosService MedicosService
+@inject EspecialidadesService EspecialidadesService
+@inject CitasService CitasService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<div class="container row mt-4 mb-4">
+    <div class="col">
+        <label for="paciente">Paciente:</label>
+        @if (Pacientes is not null)
+        {
+            <select id="paciente" @bind="pacienteId" class="form-control" required>
+                <option value="-1">Seleccione un paciente</option>
+                @foreach (var p in Pacientes)
+                {
+                    <option value="@p.Id">@p.Nombre</option>
+                }
+            </select>
+        }
+    </div>
+
+    <div class="col">
+        <label for="especialidad">Especialidad:</label>
+        @if (Especialidades is not null)
+        {
+            <select id="especialidad" class="form-control" @onchange="OnEspecialidadChanged" required>
+                <option value="-1">Seleccione una especialidad</option>
+                @foreach (var e in Especialidades)
+                {
+                    <option value="@e.Id">@e.Nombre</option>
+                }
+            </select>
+        }
+    </div>
+   
+</div>
+
+<div class="container row mt-4 mb-4">
+    <div class="col">
+        <label for="fechaConsulta">Fecha y hora de la consulta:</label>
+        <input type="datetime-local" id="fechaConsulta" @bind="fechaConsulta" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
+    </div>
+
+    <div class="col">
+        <label for="motivo">Motivo de la consulta:</label>
+        <textarea class="form-control" rows="2" placeholder="Motivo de la consulta" @bind="motivoConsulta" required></textarea>
+    </div>
+</div>
+
+<div class="container row mt-4 mb-4">
+    <div class="col">
+        <label for="medico">Médico:</label>
+        @if (Medicos is not null)
+        {
+            <select id="medico" class="form-control" @onchange="OnMedicoChanged" required>
+                <option value="-1">Seleccione un médico</option>
+                @foreach (var m in Medicos)
+                {
+                    <option value="@m.Id">@m.Nombre</option>
+                }
+            </select>
+        }
+    </div>
+
+    <div class="col">
+        <label>Horarios disponibles: </label>
+        @if (horarios.Any())
+        {
+            <select class="form-control" @onchange="@((ChangeEventArgs e) => OnSelectHorarioChanged(e))" required>
+                <option value="">Seleccione un horario</option>
+                @foreach (var horario in horarios)
+                {
+                    <option value="@horario.Id">@horario.HoraInicio - @horario.HoraFin</option>
+                }
+            </select>
+        }
+    </div>
+</div>
+
+<div class="d-inline-block justify-content-left align-items-center">
+    <button class="btn btn-primary" @onclick="GuardarCita">Guardar</button>
+    <a class="btn btn-danger" href="/citas">Cancelar</a>
+</div>
+
+@code {
+    private List<PacienteDto>? Pacientes { get; set; }
+    private int pacienteId { get; set; } = -1;
+    private int especialidadId { get; set; } = -1;
+    private int medicoId { get; set; } = -1;
+    private string motivoConsulta { get; set; } = string.Empty;
+    private List<EspecialidadDto>? Especialidades { get; set; }
+    private List<MedicoDto>? Medicos { get; set; }
+    private CitaCreateDto NuevaCita { get; set; } = new CitaCreateDto();
+    private List<HorarioMedicoCreacionDto> horarios = new List<HorarioMedicoCreacionDto>();
+    private DateOnly fechaConsulta = DateOnly.FromDateTime(DateTime.Now);
+    private HorarioMedicoCreacionDto? horarioSeleccionado = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Pacientes = await PacientesService.GetPacientesAsync() ?? new List<PacienteDto>();
+        Especialidades = await EspecialidadesService.GetEspecialidadesAsync() ?? new List<EspecialidadDto>();
+    }
+
+    private string GetDiaSemana(DateOnly fecha)
+    {
+        var diaSemana = fecha.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "Lunes",
+            DayOfWeek.Tuesday => "Martes",
+            DayOfWeek.Wednesday => "Miércoles",
+            DayOfWeek.Thursday => "Jueves",
+            DayOfWeek.Friday => "Viernes",
+            DayOfWeek.Saturday => "Sábado",
+            DayOfWeek.Sunday => "Domingo",
+            _ => ""
+        };
+
+        return diaSemana;
+    }
+
+    private async Task OnEspecialidadChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int especialidadId))
+        {
+            Console.WriteLine($"Especialidad seleccionada: {especialidadId}");
+            this.especialidadId = especialidadId;
+            Medicos = await MedicosService.GetMedicosByEspecialidadAsync(especialidadId) ?? new List<MedicoDto>();
+            var especialidadSeleccionada = Especialidades?.FirstOrDefault(e => e.Id == especialidadId);
+        }
+        else
+        {
+            Medicos = new List<MedicoDto>();
+        }
+    }
+
+    private async Task OnMedicoChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int medicoId))
+        {
+            this.medicoId = medicoId;
+            await CargarHorariosDisponiblesByMedicoId();
+            Console.WriteLine($"Médico seleccionado: {medicoId}");
+        }
+    }
+
+    private async Task CargarHorariosDisponiblesByMedicoId()
+    {
+        if (medicoId != -1 && fechaConsulta != default)
+        {
+            var diaSemana = GetDiaSemana(fechaConsulta);
+            Console.WriteLine($"Cargando horarios para el médico {medicoId} el día {diaSemana}");
+            horarios = await MedicosService.GetHorarioMedicoByIdAsync(medicoId, diaSemana);
+        }
+    }
+
+    private void OnSelectHorarioChanged(ChangeEventArgs e)
+    {
+        horarioSeleccionado = null;
+        if (int.TryParse(e.Value?.ToString(), out int horarioId))
+        {
+            horarioSeleccionado = horarios.FirstOrDefault(h => h.Id == horarioId);
+            Console.WriteLine($"Horario seleccionado: {horarioSeleccionado?.Id} {horarioSeleccionado?.HoraInicio} - {horarioSeleccionado?.HoraFin}");
+        }
+    }
+
+    private async Task GuardarCita()
+    {
+        if (especialidadId == -1)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, selecciona una especialidad.");
+            return;
+        }
+
+        if (pacienteId == -1)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, selecciona un paciente");
+            return;
+        }
+
+        if (medicoId == -1)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, selecciona un médico.");
+            return;
+        }
+
+        if (horarioSeleccionado == null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, selecciona un horario disponible.");
+            return;
+        }
+
+        if (fechaConsulta <= DateOnly.FromDateTime(DateTime.Now.AddDays(-1)))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, selecciona una fecha válida.");
+            return;
+        }
+
+        // Verificar si ya existe una cita para el mismo médico, fecha y hora.
+        var fechaHoraConsulta = new DateTime(fechaConsulta.Year, fechaConsulta.Month, fechaConsulta.Day, horarioSeleccionado.HoraInicio.Hours, horarioSeleccionado.HoraInicio.Minutes, 0);
+
+        var fechaHoraFinConsulta = new DateTime(fechaConsulta.Year, fechaConsulta.Month, fechaConsulta.Day, horarioSeleccionado.HoraFin.Hours, horarioSeleccionado.HoraFin.Minutes, 0);
+
+        Console.WriteLine($"Verificando existencia de cita para médico {medicoId}, paciente {pacienteId}, fecha y hora: {fechaHoraConsulta} - {fechaHoraFinConsulta}");
+
+        var citaExistente = await CitasService.ExisteCita(medicoId, pacienteId, fechaHoraConsulta, fechaHoraFinConsulta);
+        if (citaExistente)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Ya existe una cita para este paciente, con el mismo médico, fecha y hora.");
+            return;
+        }
+
+        // Verificar si el horario seleccionado está dentro del horario de trabajo del médico.
+        var hayDisponibilidad = await MedicosService.GetDisponibilidadHorarioMedico(medicoId, fechaConsulta, horarioSeleccionado.HoraInicio, horarioSeleccionado.HoraFin);
+
+        if (!hayDisponibilidad)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "El horario seleccionado no está disponible.");
+            return;
+        }
+
+        // Almacenar la cita
+        NuevaCita = new CitaCreateDto
+        {
+            PacienteId = pacienteId,
+            MedicoId = medicoId,
+            Motivo = motivoConsulta,
+            InicioCita = fechaHoraConsulta,
+            FinCita = fechaHoraFinConsulta
+        };
+
+        var resultado = await CitasService.AgendarCita(NuevaCita);
+
+        if (resultado)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Cita agendada exitosamente.");
+            NavigationManager.NavigateTo("/citas");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Ocurrió un error al agendar la cita. Por favor, intenta nuevamente.");
+        }
+    }
+}

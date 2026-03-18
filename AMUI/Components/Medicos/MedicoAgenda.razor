@@ -1,0 +1,89 @@
+﻿@page "/medico/agenda/{MedicoId:int}"
+
+@using AMUI.Models
+@using AMUI.Services
+@inject MedicosService MedicosService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h1>Agenda del Médico</h1>
+
+<div class="d-inline-block justify-content-left align-items-center">
+    <input class="form-control mt-2 mb-2" type="date" @onchange="ActualizarAgenda" value="@fecha.ToString("yyyy-MM-dd")" />
+</div>
+
+@if (agenda == null)
+{
+    <h2>Cargando...</h2>
+}
+else if (!agenda.Any())
+{
+    <h2>No hay citas programadas.</h2>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0 table-bordered">
+            <tr>
+                <th>Nombre del médico</th>
+                <th>Especialidad del médico</th>
+                <th>Nombre del paciente</th>
+                <th>Motivo de la cita</th>
+                <th>Fecha de la cita</th>
+                <th>Hora de la cita</th>
+                <th>Hora de finalización de la cita</th>
+                <th>Estado de la cita</th>
+            </tr>
+            @foreach (var a in agenda)
+            {
+                <tr>
+                    <td>@medico.Nombre</td>
+                    <td>@medico.Especialidad.Nombre</td>
+                    <td>@a.NombrePaciente</td>
+                    <td>@(a.Motivo ?? "-")</td>
+                    <td>@a.FechaAgenda.ToString("dd/MM/yyyy")</td>
+                    <td>@a.BloqueInicio</td>
+                    <td>@a.BloqueFin</td>
+                    <td>@a.EstadoBloque</td>
+                
+                </tr>
+            
+            }
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int MedicoId { get; set; }
+
+    private List<AgendaItemDto> agenda;
+    private MedicoDto medico;
+    private DateTime fecha = DateTime.Now;
+
+    protected override async Task OnInitializedAsync()
+    {
+        medico = await MedicosService.GetMedicoByIdAsync(MedicoId) ?? new MedicoDto();
+        await CargarAgenda();
+    }
+
+    private async Task ActualizarAgenda(ChangeEventArgs e)
+    {
+        Console.WriteLine("Fecha seleccionada: " + e.Value?.ToString());
+        if (DateTime.TryParse(e.Value?.ToString(), out var nuevaFecha))
+        {
+            fecha = nuevaFecha;
+            await CargarAgenda();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Fecha no válida. Por favor, ingresa una fecha en formato válido.");
+        }
+    }
+
+    private async Task CargarAgenda()
+    {
+        agenda = await MedicosService.GetAgendaMedicoByDate(MedicoId, fecha);
+    }
+}

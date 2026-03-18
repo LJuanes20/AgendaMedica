@@ -1,0 +1,65 @@
+﻿@page "/medicos"
+@rendermode InteractiveServer
+@using AMUI.Models
+@using AMUI.Services
+@inject MedicosService MedicosService
+@inject IJSRuntime JSRuntime
+
+<h3>Medicos</h3>
+
+<a href="medico/crear" class="btn btn-primary mt-2 mb-2">Crear Medico</a>
+
+@if (medicos == null)
+{
+    <p>Cargando...</p>
+}
+else if (!medicos.Any())
+{
+    <p>No hay medicos.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0 table-bordered">
+            <tr>
+                <th>Nombre del médico</th>
+                <th>Especialidad</th>
+                <th>Acción</th>
+            </tr>
+            @foreach (var medico in medicos)
+            {
+                <tr>
+                    <td>@medico.Nombre</td>
+                    <td>@medico.Especialidad.Nombre</td>
+                    <td>
+                        <a class="btn btn-primary" type="button" href="medico/editar/@medico.Id">Editar</a>
+                        <button class="btn btn-danger" type="button" @onclick="() => EliminarMedico(medico.Id)">Borrar</button>
+                        <a class="btn btn-info" type="button" href="medico/agenda/@medico.Id">Ver agenda</a>
+                    </td>
+                </tr>
+            
+            }
+        </table>
+    </div>
+}
+
+@code {
+    private List<MedicoDto>? medicos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        medicos = await MedicosService.GetMedicosAsync();
+    }
+
+    private async Task EliminarMedico(int id)
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar este médico?");
+        if (confirm)
+        {
+            var result = await MedicosService.DeleteMedicoAsync(id);
+            var message = result.Completed ? "Médico eliminado exitosamente." : result.Message;
+            await JSRuntime.InvokeVoidAsync("alert", message);
+            medicos = await MedicosService.GetMedicosAsync();
+        }
+    }
+}

@@ -1,0 +1,113 @@
+﻿@page "/citas"
+@rendermode InteractiveServer
+@using AMUI.Models
+@using AMUI.Services
+@inject CitasService CitasService
+@inject IJSRuntime JSRuntime
+
+<h3>Citas</h3>
+
+<a href="citas/agendar" class="btn btn-primary mt-2 mb-2">Agendar Cita</a>
+
+@if (citas == null)
+{
+    <p>Cargando...</p>
+}
+else if (!citas.Any())
+{
+    <p>No hay citas.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0 table-bordered">
+            <tr>
+                <th>Folio</th>
+                <th>Paciente</th>
+                <th>Teléfono del paciente</th>
+                <th>Médico</th>
+                <th>Especialidad</th>
+                <th>Motivo</th>
+                <th>Estado</th>
+                <th>Fecha de la consulta</th>
+                <th>Hora de la consulta</th>
+                <th>Termino de la consulta</th>
+                <th>Acciones</th>
+           
+            </tr>
+            @foreach (var cita in citas)
+            {
+                <tr>
+                    <td>@cita.Id</td>
+                    <td>@cita.Paciente.Nombre</td>
+                    <td>@cita.Paciente.Telefono</td>
+                    <td>@cita.Medico.Nombre</td>
+                    <td>@cita.Medico.Especialidad.Nombre</td>
+                    <td>@cita.Motivo</td>
+                    <td><strong>@cita.Estado</strong></td>
+                    <td>@cita.InicioCita.ToString("dd/MM/yyyy")</td>
+                    <td>@cita.InicioCita.ToString("hh\\:mm")</td>
+                    <td>@cita.FinCita.ToString("hh\\:mm")</td>
+                    <td>
+                        <button class="btn btn-danger @(cita.IsCancelled ? "disabled" : "")" type="button" @onclick="() => CancelarCita(cita)">Cancelar</button>
+                    </td>
+                </tr>
+            
+            }
+        </table>
+    </div>
+}
+
+@code {
+    private List<CitaDto>? citas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        citas = await CitasService.GetAllCitas();
+    }
+
+    private async Task CancelarCita(CitaDto citaDto)
+    {
+        if (citaDto.IsCancelled)
+            return;
+
+        var noCancelaciones = await CitasService.GetNumeroCancelaciones(citaDto.Paciente.Id);
+        if (noCancelaciones >= 5)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"El paciente ha realizado {noCancelaciones} cancelaciones. Tome sus precauciones.");
+            return;
+        }
+
+        var confirm = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            "¿Estás seguro de que deseas cancelar esta cita?"
+        );
+
+        if (!confirm)
+            return;
+
+        var motivo = await JSRuntime.InvokeAsync<string>(
+            "prompt",
+            "Ingrese el motivo de cancelación:",
+            ""
+        );
+
+        if (string.IsNullOrWhiteSpace(motivo))
+            return;
+
+        citaDto.MotivoCancelacion = motivo;
+
+        var success = await CitasService.CancelarCita(citaDto);
+
+        if (success)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Cita cancelada exitosamente.");
+            citas = await CitasService.GetAllCitas();
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Error al cancelar la cita. Por favor, inténtelo de nuevo.");
+        }
+    }
+    
+}

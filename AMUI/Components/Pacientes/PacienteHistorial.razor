@@ -1,0 +1,62 @@
+﻿@page "/pacientes/historial/{PacienteId:int}"
+@using AMUI.Models
+@using AMUI.Services
+@inject CitasService CitasService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<h1>Historial de Citas del Paciente</h1>
+
+@if (citas == null)
+{
+    <h2>Cargando...</h2>
+}
+else if (!citas.Any())
+{
+    <h2>No hay citas.</h2>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0 table-bordered">
+            <tr>
+                <th>Nombre del paciente</th>
+                <th>Motivo de la cita</th>
+                <th>Fecha de la cita</th>
+                <th>Hora de la cita</th>
+                <th>Hora de finalización de la cita</th>
+                <th>Estado de la cita</th>
+                <th>Motivo de cancelación</th>
+                <th>Médico</th>
+                <th>Especialidad del médico</th>
+            </tr>
+            @foreach (var cita in citas)
+            {
+                <tr>
+                    <td>@cita.Paciente.Nombre</td>
+                    <td>@cita.Motivo</td>
+                    <td>@cita.InicioCita.ToString("dd/MM/yyyy")</td>
+                    <td>@cita.InicioCita.ToString("HH:mm")</td>
+                    <td>@cita.FinCita.ToString("HH:mm")</td>
+                    <td>@cita.Estado</td>
+                    <td>@(cita.MotivoCancelacion ?? "-")</td>
+                    <td>@cita.Medico.Nombre</td>
+                    <td>@cita.Medico.Especialidad.Nombre</td>
+                </tr>
+            
+            }
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int PacienteId { get; set; }
+
+    private List<CitaDto>? citas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        citas = await CitasService.GetCitasByPacienteIdAsync(PacienteId) ?? new List<CitaDto>();
+    }
+}
