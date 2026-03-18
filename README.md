@@ -88,11 +88,8 @@ Ejecutar los scripts en orden desde SQL Server Management Studio (SSMS) u otra h
 | # | Archivo                 | Descripción                              |
 |---|-------------------------|------------------------------------------|
 | 1 | `01_CrearBD.sql`        | Crea la base de datos `agendamedica`     |
-|---|-------------------------|------------------------------------------|
 | 2 | `02_Tablas.sql`         | Crea todas las tablas y llaves foráneas  |
-|---|-------------------------|------------------------------------------|
 | 3 | `03_Procedimientos.sql` | Crea los stored procedures               |
-|---|-------------------------|------------------------------------------|
 | 4 | `04_DatosPrueba.sql`    | Inserta datos de prueba (limpia primero) |
 |---|-------------------------|------------------------------------------|
 
