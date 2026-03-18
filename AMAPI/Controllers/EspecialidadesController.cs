@@ -1,5 +1,5 @@
 ﻿using AMAPI.Models;
-using AMAPI.Services;
+using AMAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMAPI.Controllers
@@ -8,9 +8,9 @@ namespace AMAPI.Controllers
     [Route("api/[controller]")]
     public class EspecialidadesController : ControllerBase
     {
-        private readonly EspecialidadService _especialidadService;
+        private readonly IEspecialidadService _especialidadService;
 
-        public EspecialidadesController(EspecialidadService especialidadService)
+        public EspecialidadesController(IEspecialidadService especialidadService)
         {
             _especialidadService = especialidadService;
         }

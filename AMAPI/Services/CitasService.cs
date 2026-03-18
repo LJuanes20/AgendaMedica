@@ -1,10 +1,11 @@
 ﻿using AMAPI.Infrastructure;
 using AMAPI.Models;
+using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 
 namespace AMAPI.Services
 {
-    public class CitasService
+    public class CitasService : ICitasService
     {
         private readonly DbContext _dbContext;
         private readonly string _GET_ALL_CITAS_QUERY = "SELECT c.IdCita, c.Estado, c.Motivo, c.MotivoCancelacion, c.InicioCita, c.FinCita, p.IdPaciente, p.NombreCompleto AS PacienteNombre, p.Telefono AS PacienteTelefono, p.Correo AS PacienteCorreo, m.IdMedico, m.NombreCompleto AS MedicoNombre, e.IdEspecialidad, e.Nombre AS Especialidad, e.Duracion AS DuracionEspecialidad FROM dbo.Cita c INNER JOIN dbo.Paciente p ON c.PacienteId = p.IdPaciente INNER JOIN dbo.Medico m ON c.MedicoId = m.IdMedico INNER JOIN dbo.Especialidad e ON m.EspecialidadId = e.IdEspecialidad ";

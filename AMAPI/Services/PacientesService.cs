@@ -1,10 +1,11 @@
 ﻿using AMAPI.Infrastructure;
 using AMAPI.Models;
+using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 
 namespace AMAPI.Services
 {
-    public class PacientesService
+    public class PacientesService : IPacientesService
     {
         private readonly DbContext _dbContext;
         private readonly string _GET_PACIENTES_QUERY = "SELECT IdPaciente, NombreCompleto, FechaNacimiento, Telefono, Correo FROM [Paciente]";
