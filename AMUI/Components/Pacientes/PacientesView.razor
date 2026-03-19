@@ -1,6 +1,6 @@
 ﻿@page "/pacientes"
 @rendermode InteractiveServer
-@using AMUI.Models
+@using AMShared.Models
 @using AMUI.Services
 @inject PacienteService PacienteService
 @inject IJSRuntime JSRuntime
@@ -20,7 +20,7 @@ else if (!pacientes.Any())
 else
 {
     <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 table-bordered">
+        <table class="w-100 text-start table-striped table-bordered">
             <tr>
                 <th>Nombre del paciente</th>
                 <th>Telefono</th>
@@ -31,8 +31,8 @@ else
             {
                 <tr>
                     <td>@paciente.Nombre</td>
-                    <td>@paciente.Correo</td>
                     <td>@paciente.Telefono</td>
+                    <td>@paciente.Correo</td>
                     <td>
                         <a class="btn btn-primary" type="button" href="pacientes/editar/@paciente.Id">Editar</a>
                         <button class="btn btn-danger" type="button" @onclick="() => EliminarPaciente(paciente.Id)">

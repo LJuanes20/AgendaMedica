@@ -1,4 +1,4 @@
-﻿namespace AMAPI.Models
+﻿namespace AMShared.Models
 {
     public class OperationResult
     {
@@ -6,4 +6,5 @@
 
         public string? Message { get; set; }
     }
+
 }

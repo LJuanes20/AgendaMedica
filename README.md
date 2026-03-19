@@ -15,6 +15,7 @@ La solución `AgendaMedica.slnx` contiene tres proyectos dentro del mismo reposi
 AgendaMedica/
 ├── AMAPI/          → ASP.NET Core Web API (backend REST)
 ├── AMUI/           → Blazor Server (frontend)
+├── AMShared        → Proyecto de clases para compartir modelos dtos
 ├── AMTests/        → Proyecto de pruebas unitarias (xUnit + Moq)
 └── scripts/        → Scripts SQL para crear y poblar la base de datos
 ```
@@ -31,7 +32,7 @@ Los proyectos AMAPI y AMUI son contracciones de "Agenda Médica API" y "Agenda M
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
 - SQL Server (local o remoto)
-- Visual Studio 2022+ (recomendado) o VS Code
+- Visual Studio 2022 o superior
 
 ---
 
@@ -91,7 +92,7 @@ Ejecutar los scripts en orden desde SQL Server Management Studio (SSMS) u otra h
 | 2 | `02_Tablas.sql`         | Crea todas las tablas y llaves foráneas  |
 | 3 | `03_Procedimientos.sql` | Crea los stored procedures               |
 | 4 | `04_DatosPrueba.sql`    | Inserta datos de prueba (limpia primero) |
-|---|-------------------------|------------------------------------------|
+
 
 > Nota: El script `04_DatosPrueba.sql` **elimina y reinicia** todos los datos existentes antes de insertar.
 
@@ -161,6 +162,12 @@ Obtiene la agenda completa de un médico para un día específico, mostrando cad
 **Parámetros:** `@MedicoId`, `@Fecha`  
 **Retorna:** Lista de bloques con datos de paciente, estado de cita y motivo.
 
+#### `sp_InsertarCita`
+Inserta una nueva cita, sólamente si se cumple con la siguiente validación; un paciente no debe tener más de N cantidad de 
+citas canceladas en un periodo de un mes.
+**Parametros**  `@MedicoId`, `@PacienteId`, `@Estado`, `@Motivo`, `@MotivoCancelacion`, `@InicioCita`, `@FinCita`, `@NoCancelaciones`
+**Retorna:** Sólo retorna una excepción si no se insertó la cita.
+
 ---
 
 ## Decisiones de Diseño y Arquitectura
@@ -219,7 +226,7 @@ Se definieron **tres módulos principales** para mantener el alcance del sistema
 
 - **Validaciones al agendar:** La disponibilidad y detección de duplicidad se verifican mediante consultas directas en el flujo de agendar. Esto podría centralizarse en un módulo de validaciones dedicado o en un único stored procedure que agrupe todas las reglas de negocio de una cita.
 
-- **Bootstrap en botones:** Se identificó un problema visual con algunos botones que aparecen con opacidad reducida (opacos) debido a clases CSS de Bootstrap. Queda pendiente su corrección.
+- **Para la alerta de cancelaciones, se diseño un SP que valida el numero de cancelaciones del paciente en los últimos 30 días, e impide almacenar la cita, el default es 3, pero este se puede configurar según las necesidades del sistema si se desea.**
 
 ---
 
@@ -238,17 +245,15 @@ VerificarCancelacionesPacienteTest: Verifica que se activa la alerta al alcanzar
 
 ---
 
-## Pendientes y propuestas de mejora
+## Pendientes y puntos de mejora
 
 **Sugerencia de horarios disponibles** — Si el horario solicitado no está libre, mostrar los próximos 5 slots disponibles del médico Consultar los bloques libres de `HorarioMedico` para esa semana, cruzar contra `Cita` para descartar ocupados, y retornar los primeros 5 resultados ordenados por fecha/hora
 **Autenticación y seguridad** JWT en la API + login en Blazor. Roles: Recepcionista, Médico, Admin 
 **Manejo formal de errores HTTP** Middleware global de excepciones + códigos 400/404/409 consistentes con mensajes en español
 **Módulo de validaciones centralizado** Extraer todas las reglas de agendar cita a un `CitaValidationService` o un stored procedure unificado
-**Reparar Bootstrap en botones** Revisar clases CSS conflictivas (`disabled`, `opacity`) en los componentes Blazor
 **Pruebas unitarias para CRUD** Agregar tests para `MedicoService` y `PacientesService` cubriendo altas, ediciones y eliminaciones
 **Modales y validaciones de formulario** Reemplazar `alert()` de JavaScript por modales Blazor y atributos `[Required]` /`DataAnnotationsValidator` 
 **Proyecto Shared** Proyecto para compartir modelos y DTOs entre API y UI, evitando duplicación de clases como `MedicoDto`, `PacienteDto`, etc.
-
 ---
 
 ## Tecnologías utilizadas

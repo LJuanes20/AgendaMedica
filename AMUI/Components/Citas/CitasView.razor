@@ -1,6 +1,6 @@
 ﻿@page "/citas"
 @rendermode InteractiveServer
-@using AMUI.Models
+@using AMShared.Models
 @using AMUI.Services
 @inject CitasService CitasService
 @inject IJSRuntime JSRuntime
@@ -20,7 +20,7 @@ else if (!citas.Any())
 else
 {
     <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 table-bordered">
+        <table class="w-100 text-start table-striped table-bordered">
             <tr>
                 <th>Folio</th>
                 <th>Paciente</th>
@@ -70,13 +70,6 @@ else
     {
         if (citaDto.IsCancelled)
             return;
-
-        var noCancelaciones = await CitasService.GetNumeroCancelaciones(citaDto.Paciente.Id);
-        if (noCancelaciones >= 5)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", $"El paciente ha realizado {noCancelaciones} cancelaciones. Tome sus precauciones.");
-            return;
-        }
 
         var confirm = await JSRuntime.InvokeAsync<bool>(
             "confirm",

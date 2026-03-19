@@ -1,4 +1,4 @@
-using AMAPI.Models;
+using AMShared.Models;
 using AMAPI.Services.Interfaces;
 using AMUI.Services;
 using Moq;
@@ -30,10 +30,10 @@ namespace AMTests
 
             _mockCitasService
                 .Setup(s => s.AgendarCita(cita))
-                .Returns(true);
+                .Returns(new OperationResult { Completed = true, Message = "Cita agendada correctamente." });
 
             var resultado = _mockCitasService.Object.AgendarCita(cita);
-            Assert.True(resultado);
+            Assert.True(resultado.Completed);
         }
 
         [Fact]
@@ -50,10 +50,10 @@ namespace AMTests
 
             _mockCitasService
                 .Setup(s => s.AgendarCita(cita))
-                .Returns(false);
+                .Returns(new OperationResult { Completed = false, Message = "Error al agendar la cita." });
 
             var resultado = _mockCitasService.Object.AgendarCita(cita);
-            Assert.False(resultado);
+            Assert.False(resultado.Completed);
         }
 
         [Fact]

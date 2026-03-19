@@ -1,4 +1,4 @@
-﻿using AMUI.Models;
+﻿using AMShared.Models;
 using System.Text.Json;
 
 namespace AMUI.Services
@@ -12,11 +12,13 @@ namespace AMUI.Services
             _httpClient = httpClient;
         }
 
-        public async Task<bool> AgendarCita(CitaCreateDto cita)
+        public async Task<OperationResult> AgendarCita(CitaCreateDto cita)
         {
             var content = new StringContent(JsonSerializer.Serialize(cita), System.Text.Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync("Citas/agendar", content);
-            return response.IsSuccessStatusCode;
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<OperationResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OperationResult() { Message = "Error al agendar la cita.", Completed = false };
+
         }
 
         public async Task<List<CitaDto>> GetCitasByPacienteIdAsync(int pacienteId)

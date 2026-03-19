@@ -1,6 +1,6 @@
 ﻿@page "/medicos"
 @rendermode InteractiveServer
-@using AMUI.Models
+@using AMShared.Models
 @using AMUI.Services
 @inject MedicosService MedicosService
 @inject IJSRuntime JSRuntime
@@ -20,7 +20,7 @@ else if (!medicos.Any())
 else
 {
     <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 table-bordered">
+        <table class="w-100 text-start table-striped table-bordered">
             <tr>
                 <th>Nombre del médico</th>
                 <th>Especialidad</th>

@@ -1,5 +1,5 @@
 ﻿@page "/citas/agendar"
-@using AMUI.Models
+@using AMShared.Models
 @using AMUI.Services
 @inject PacienteService PacientesService
 @inject MedicosService MedicosService
@@ -42,8 +42,8 @@
 
 <div class="container row mt-4 mb-4">
     <div class="col">
-        <label for="fechaConsulta">Fecha y hora de la consulta:</label>
-        <input type="datetime-local" id="fechaConsulta" @bind="fechaConsulta" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" class="form-control" required />
+        <label for="fechaConsulta">Fecha de la consulta:</label>
+        <input type="date" id="fechaConsulta" @bind="fechaConsulta" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required />
     </div>
 
     <div class="col">
@@ -78,6 +78,10 @@
                     <option value="@horario.Id">@horario.HoraInicio - @horario.HoraFin</option>
                 }
             </select>
+        } 
+        else
+        {
+            <p>No hay horarios disponibles para el médico seleccionado en la fecha seleccionada.</p>
         }
     </div>
 </div>
@@ -205,6 +209,13 @@
 
         var fechaHoraFinConsulta = new DateTime(fechaConsulta.Year, fechaConsulta.Month, fechaConsulta.Day, horarioSeleccionado.HoraFin.Hours, horarioSeleccionado.HoraFin.Minutes, 0);
 
+        var noCancelaciones = await CitasService.GetNumeroCancelaciones(pacienteId);
+        if (noCancelaciones >= 5)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"El paciente ha realizado {noCancelaciones} cancelaciones. No es posible agendar una nueva cita.");
+            return;
+        }
+
         Console.WriteLine($"Verificando existencia de cita para médico {medicoId}, paciente {pacienteId}, fecha y hora: {fechaHoraConsulta} - {fechaHoraFinConsulta}");
 
         var citaExistente = await CitasService.ExisteCita(medicoId, pacienteId, fechaHoraConsulta, fechaHoraFinConsulta);
@@ -235,14 +246,14 @@
 
         var resultado = await CitasService.AgendarCita(NuevaCita);
 
-        if (resultado)
+        if (resultado.Completed)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Cita agendada exitosamente.");
+            await JSRuntime.InvokeVoidAsync("alert", resultado.Message);
             NavigationManager.NavigateTo("/citas");
         }
         else
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Ocurrió un error al agendar la cita. Por favor, intenta nuevamente.");
+            await JSRuntime.InvokeVoidAsync("alert", resultado.Message);
         }
     }
 }

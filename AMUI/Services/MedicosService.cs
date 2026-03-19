@@ -1,4 +1,4 @@
-﻿using AMUI.Models;
+﻿using AMShared.Models;
 using System.Text.Json;
 
 namespace AMUI.Services
