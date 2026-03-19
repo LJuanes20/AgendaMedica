@@ -116,6 +116,24 @@
 
     private async Task ActualizarMedico()
     {
+        if (medico is null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, complete los datos del médico.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(medico.Nombre))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, ingrese el nombre del médico.");
+            return;
+        }
+
+        if (EspecialidadSeleccionada is null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, seleccione una especialidad.");
+            return;
+        }
+
         medico.Horarios = ConstruirHorariosMedico();
 
         var result = await MedicosService.UpdateMedicoAsync(medico);

@@ -31,6 +31,21 @@
 
     private async Task ActualizarPaciente()
     {
+        if (paciente is null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, complete los datos del paciente.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(paciente.Nombre) ||
+            string.IsNullOrWhiteSpace(paciente.Telefono) ||
+            string.IsNullOrWhiteSpace(paciente.Correo) ||
+            paciente.FechaNacimiento == default)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, completa todos los campos.");
+            return;
+        }
+
         var result = await PacienteService.UpdatePacienteAsync(paciente);
         var message = result.Completed ? "Paciente actualizado exitosamente." : result.Message;
         await JSRuntime.InvokeVoidAsync("alert", message);
