@@ -1,4 +1,4 @@
-﻿namespace AMUI.Models
+﻿namespace AMShared.Models
 {
     public class EspecialidadDto
     {

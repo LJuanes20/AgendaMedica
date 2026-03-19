@@ -1,10 +1,10 @@
-using AMAPI.Models;
+using AMShared.Models;
 
 namespace AMAPI.Services.Interfaces
 {
     public interface ICitasService
     {
-        bool AgendarCita(CitaCreateDto cita);
+        OperationResult AgendarCita(CitaCreateDto cita);
         bool CancelarCita(int idCita, string motivoCancelacion = "Cancelada por el paciente sin especificar motivo");
         List<CitaDto> ConsultarCitas();
         List<CitaDto> ConsultarCitasPorPaciente(int pacienteId);

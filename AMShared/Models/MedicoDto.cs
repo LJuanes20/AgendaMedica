@@ -1,4 +1,4 @@
-﻿namespace AMUI.Models
+﻿namespace AMShared.Models
 {
     public class MedicoDto
     {
@@ -7,4 +7,5 @@
 
         public EspecialidadDto Especialidad { get; set; }
     }
+
 }

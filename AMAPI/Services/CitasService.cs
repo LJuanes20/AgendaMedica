@@ -1,6 +1,7 @@
 ﻿using AMAPI.Infrastructure;
-using AMAPI.Models;
+using AMShared.Models;
 using AMAPI.Services.Interfaces;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace AMAPI.Services
@@ -8,26 +9,50 @@ namespace AMAPI.Services
     public class CitasService : ICitasService
     {
         private readonly DbContext _dbContext;
-        private readonly string _GET_ALL_CITAS_QUERY = "SELECT c.IdCita, c.Estado, c.Motivo, c.MotivoCancelacion, c.InicioCita, c.FinCita, p.IdPaciente, p.NombreCompleto AS PacienteNombre, p.Telefono AS PacienteTelefono, p.Correo AS PacienteCorreo, m.IdMedico, m.NombreCompleto AS MedicoNombre, e.IdEspecialidad, e.Nombre AS Especialidad, e.Duracion AS DuracionEspecialidad FROM dbo.Cita c INNER JOIN dbo.Paciente p ON c.PacienteId = p.IdPaciente INNER JOIN dbo.Medico m ON c.MedicoId = m.IdMedico INNER JOIN dbo.Especialidad e ON m.EspecialidadId = e.IdEspecialidad ";
-        private readonly string _CREAR_CITA_QUERY = "INSERT INTO [dbo].[Cita] ([MedicoId], [PacienteId], [Estado],[Motivo], [InicioCita], [FinCita]) VALUES (@MedicoId, @PacienteId, @Estado, @Motivo, @InicioCita, @FinCita)";
+        private readonly string _GET_ALL_CITAS_QUERY = "SELECT c.IdCita, c.Estado, c.Motivo, c.MotivoCancelacion, c.InicioCita, c.FinCita, p.IdPaciente, p.NombreCompleto AS PacienteNombre, p.Telefono AS PacienteTelefono, p.Correo AS PacienteCorreo, m.IdMedico, m.NombreCompleto AS MedicoNombre, e.IdEspecialidad, e.Nombre AS Especialidad, e.Duracion AS DuracionEspecialidad FROM dbo.Cita c INNER JOIN dbo.Paciente p ON c.PacienteId = p.IdPaciente INNER JOIN dbo.Medico m ON c.MedicoId = m.IdMedico INNER JOIN dbo.Especialidad e ON m.EspecialidadId = e.IdEspecialidad ";     
         private readonly string _CANCELAR_CITA_QUERY = "UPDATE dbo.Cita SET Estado = 'Cancelada', MotivoCancelacion = @MotivoCancelacion WHERE IdCita = @IdCita;";
         private readonly string _GET_EXIST_CITA = "IF EXISTS (SELECT 1 FROM Cita WHERE MedicoId = @MedicoId AND PacienteId = @PacienteId AND Estado <> 'Cancelada' AND @InicioCita >= InicioCita AND @FinCita <= FinCita) SELECT 1 AS Agendada; ELSE SELECT 0 AS Agendada;";
-        private readonly string _ALERTA_5_CANCELACIONES = "SELECT COUNT(*) as Cancelaciones FROM [agendamedica].[dbo].[Cita] WHERE Estado = 'Cancelada' AND PacienteId = @PacienteId";
+        private readonly string _GET_CANCELACIONES_MES_ANTERIOR = "SELECT COUNT(*) as Cancelaciones FROM [agendamedica].[dbo].[Cita] WHERE Estado = 'Cancelada' AND PacienteId = @PacienteId AND InicioCita >= DATEADD(DAY, -30, GETDATE());";
+        private readonly string _AGENDAR_CITA_SP = "sp_InsertarCita";
+        private readonly string _PROGRAMADA = "Programada";
         public CitasService(DbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public bool AgendarCita(CitaCreateDto cita)
+        public OperationResult AgendarCita(CitaCreateDto cita)
         {
-            var command = new SqlCommand(_CREAR_CITA_QUERY, _dbContext.Connection());
-            command.Parameters.AddWithValue("@MedicoId", cita.MedicoId);
-            command.Parameters.AddWithValue("@PacienteId", cita.PacienteId);
-            command.Parameters.AddWithValue("@Estado", "Programada");
-            command.Parameters.AddWithValue("@Motivo", cita.Motivo);
-            command.Parameters.AddWithValue("@InicioCita", cita.InicioCita);
-            command.Parameters.AddWithValue("@FinCita", cita.FinCita);
-            return command.ExecuteNonQuery() > 0;
+            var result = new OperationResult();
+            try
+            {
+                using var command = new SqlCommand(_AGENDAR_CITA_SP, _dbContext.Connection());
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@MedicoId", cita.MedicoId);
+                command.Parameters.AddWithValue("@PacienteId", cita.PacienteId);
+                command.Parameters.AddWithValue("@Estado", _PROGRAMADA);
+                command.Parameters.AddWithValue("@Motivo", cita.Motivo);
+                command.Parameters.AddWithValue("@InicioCita", cita.InicioCita);
+                command.Parameters.AddWithValue("@FinCita", cita.FinCita);
+                command.Parameters.AddWithValue("@NoCancelaciones", 3);
+
+                var response = command.ExecuteNonQuery();
+
+                result.Completed = true;
+                result.Message = "Cita agendada correctamente.";
+                return result;
+            }
+            catch (SqlException ex)
+            {
+                result.Completed = false;
+                result.Message = ex.Message;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Completed = false;
+                result.Message = ex.Message;
+                return result;
+            }
         }
 
         public bool CancelarCita(int idCita, string motivoCancelacion = "Cancelada por el paciente sin especificar motivo")
@@ -158,7 +183,7 @@ namespace AMAPI.Services
         public int ContarCancelacionesPaciente(int pacienteId)
         {
             int cancelaciones = 0;
-            var command = new SqlCommand(_ALERTA_5_CANCELACIONES, _dbContext.Connection());
+            var command = new SqlCommand(_GET_CANCELACIONES_MES_ANTERIOR, _dbContext.Connection());
             command.Parameters.AddWithValue("@PacienteId", pacienteId);
             var result = command.ExecuteScalar();
             cancelaciones = Convert.ToInt32(result);

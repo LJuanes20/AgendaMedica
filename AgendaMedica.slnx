@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="AMAPI/AMAPI.csproj" />
+  <Project Path="AMShared/AMShared.csproj" Id="dacf57fe-978a-4241-9b85-540d49b75e77" />
   <Project Path="AMTests/AMTests.csproj" />
   <Project Path="AMUI/AMUI.csproj" />
 </Solution>

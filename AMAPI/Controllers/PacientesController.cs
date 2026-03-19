@@ -1,4 +1,4 @@
-﻿using AMAPI.Models;
+﻿using AMShared.Models;
 using AMAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 

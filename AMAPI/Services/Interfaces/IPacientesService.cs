@@ -1,4 +1,4 @@
-using AMAPI.Models;
+using AMShared.Models;
 
 namespace AMAPI.Services.Interfaces
 {

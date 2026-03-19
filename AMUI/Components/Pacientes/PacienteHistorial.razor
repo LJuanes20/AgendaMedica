@@ -1,5 +1,5 @@
 ﻿@page "/pacientes/historial/{PacienteId:int}"
-@using AMUI.Models
+@using AMShared.Models
 @using AMUI.Services
 @inject CitasService CitasService
 @inject IJSRuntime JSRuntime
@@ -18,7 +18,7 @@ else if (!citas.Any())
 else
 {
     <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 table-bordered">
+        <table class="w-100 text-start table-striped table-bordered">
             <tr>
                 <th>Nombre del paciente</th>
                 <th>Motivo de la cita</th>

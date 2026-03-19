@@ -1,4 +1,4 @@
-﻿namespace AMAPI.Models
+﻿namespace AMShared.Models
 {
     public class AgendaItemDto
     {
@@ -17,4 +17,5 @@
         public string? Motivo { get; set; }
 
     }
+
 }

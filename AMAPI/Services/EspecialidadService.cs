@@ -1,5 +1,5 @@
 ﻿using AMAPI.Infrastructure;
-using AMAPI.Models;
+using AMShared.Models;
 using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 

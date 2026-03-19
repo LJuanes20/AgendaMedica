@@ -1,5 +1,5 @@
 ﻿using AMAPI.Infrastructure;
-using AMAPI.Models;
+using AMShared.Models;
 using AMAPI.Services.Interfaces;
 using System.Data.SqlClient;
 
@@ -12,8 +12,7 @@ namespace AMAPI.Services
         private readonly string _GET_MEDICO_BY_ID_QUERY = "{0} WHERE m.IdMedico = @Id";
         private readonly string _POST_CREATE_MEDICO_QUERY = "INSERT INTO Medico (NombreCompleto, EspecialidadId) VALUES(@NombreCompleto, @EspecialidadId); SELECT CAST(SCOPE_IDENTITY() AS INT);";
         private readonly string _POST_UPDATE_MEDICO_QUERY = "UPDATE dbo.Medico SET NombreCompleto = @NombreCompleto, EspecialidadId = @EspecialidadId WHERE IdMedico = @Id";
-        private readonly string _DELETE_MEDICO_QUERY = "DELETE FROM dbo.Medico WHERE IdMedico = @Id";
-        private readonly string _GET_AGENDA_FROM_MEDICO_QUERY = "SELECT c.IdCita, c.Estado, c.Motivo, c.InicioCita, c.FinCita, p.NombreCompleto AS PacienteNombre, p.Telefono AS PacienteTelefono, m.NombreCompleto AS MedicoNombre, e.Nombre AS Especialidad FROM dbo.Cita c INNER JOIN dbo.Paciente p ON c.PacienteId = p.IdPaciente INNER JOIN dbo.Medico m ON c.MedicoId = m.IdMedico INNER JOIN dbo.Especialidad e ON m.EspecialidadId = e.IdEspecialidad WHERE c.Estado <> 'Cancelada' AND c.MedicoId = @MedicoId AND c.InicioCita >= @Fecha AND c.InicioCita < DATEADD(DAY, 1, @Fecha) ORDER BY c.InicioCita ASC;";
+        private readonly string _DELETE_MEDICO_QUERY = "DELETE FROM dbo.Medico WHERE IdMedico = @Id";       
         private readonly string _SP_AGENDA_MEDICO_BY_DATE = "EXEC dbo.sp_ObtenerAgendaMedicoPorFecha  @MedicoId = @MedicoId, @Fecha = @Fecha;";
         private readonly string _DELETE_HORARIO_MEDICO = "DELETE FROM HorarioMedico WHERE MedicoId = @MedicoId";
         private readonly string _GET_HORARIOS_MEDICO = "SELECT DiaSemana, HoraInicio, HoraFin FROM HorarioMedico WHERE MedicoId = @MedicoId";
@@ -398,7 +397,7 @@ namespace AMAPI.Services
                 result.Message = "No se puede eliminar el médico porque tiene citas registradas.";
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 result.Completed = false;
                 result.Message = "Ocurrió un error al eliminar el médico.";

@@ -1,4 +1,4 @@
-﻿using AMAPI.Models;
+﻿using AMShared.Models;
 using AMAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,15 +27,15 @@ namespace AMAPI.Controllers
         }
 
         [HttpPost("agendar")]
-        public ActionResult<bool> AgendarCita(CitaCreateDto cita)
+        public ActionResult<OperationResult> AgendarCita(CitaCreateDto cita)
         {
             var resultado = _citasService.AgendarCita(cita);
-            if (resultado)
+            if (resultado.Completed)
             {
-                return Ok(true);
+                return Ok(resultado);
             }
 
-            return BadRequest(false);
+            return BadRequest(resultado);
         }
 
         [HttpPost("cancelar/{id}")]
