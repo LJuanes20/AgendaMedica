@@ -89,11 +89,8 @@ Ejecutar los scripts en orden desde SQL Server Management Studio (SSMS) u otra h
 | # | Archivo                 | Descripción                              |
 |---|-------------------------|------------------------------------------|
 | 1 | `01_CrearBD.sql`        | Crea la base de datos `agendamedica`     |
-|---|-------------------------|------------------------------------------|
 | 2 | `02_Tablas.sql`         | Crea todas las tablas y llaves foráneas  |
-|---|-------------------------|------------------------------------------|
 | 3 | `03_Procedimientos.sql` | Crea los stored procedures               |
-|---|-------------------------|------------------------------------------|
 | 4 | `04_DatosPrueba.sql`    | Inserta datos de prueba (limpia primero) |
 
 
@@ -281,5 +278,3 @@ Iimplicaría varios puntos de atención.
 - La interfaz gráfica requeriría una reescritura completa hacia el nuevo framework que se decida usar (Blazor, Angular, React, etc.).
 
 ---
-
-Nota final: Este proyecto se desarrolló con el objetivo de demostrar habilidades técnicas en C# .NET, diseño de sistemas y buenas prácticas de desarrollo. Se priorizó la funcionalidad y claridad del código sobre la implementación de características adicionales o mejoras estéticas, quedando varias de estas como puntos de mejora futura.
