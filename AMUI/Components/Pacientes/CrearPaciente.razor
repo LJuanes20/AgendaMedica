@@ -9,10 +9,10 @@
 <h3>Crear paciente</h3>
 
 <div>
-    <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Nombre" placeholder="Nombre" />
-    <input type="date" class="form-control mt-2 mb-2" @bind-value="@paciente.FechaNacimiento" placeholder="Fecha de nacimiento" />
-    <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Telefono" placeholder="Teléfono" />
-    <input type="email" class="form-control mt-2 mb-2" @bind-value="@paciente.Correo" placeholder="Correo" />
+   <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Nombre" placeholder="Nombre" required />
+   <input type="date" class="form-control mt-2 mb-2" @bind-value="@paciente.FechaNacimiento" placeholder="Fecha de nacimiento" required />
+   <input type="text" class="form-control mt-2 mb-2" @bind-value="@paciente.Telefono" placeholder="Teléfono" required />
+   <input type="email" class="form-control mt-2 mb-2" @bind-value="@paciente.Correo" placeholder="Correo" required />
 </div>
 
 <button class="btn btn-primary" @onclick="CrearNuevoPaciente">Crear</button>
@@ -22,6 +22,21 @@
 
     private async Task CrearNuevoPaciente()
     {
+        if (paciente is null)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, complete los datos del paciente.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(paciente.Nombre) ||
+            string.IsNullOrWhiteSpace(paciente.Telefono) ||
+            string.IsNullOrWhiteSpace(paciente.Correo) ||
+            paciente.FechaNacimiento == default)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Por favor, completa todos los campos.");
+            return;
+        }
+
         var result = await PacienteService.CreatePacienteAsync(paciente);
         var message = result.Completed ? "Paciente creado exitosamente." : result.Message;
         await JSRuntime.InvokeVoidAsync("alert", message);

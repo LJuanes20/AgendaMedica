@@ -248,9 +248,7 @@ VerificarCancelacionesPacienteTest: Verifica que se activa la alerta al alcanzar
 ## Pendientes y puntos de mejora
 
 **Sugerencia de horarios disponibles** — Si el horario solicitado no está libre, mostrar los próximos 5 slots disponibles del médico Consultar los bloques libres de `HorarioMedico` para esa semana, cruzar contra `Cita` para descartar ocupados, y retornar los primeros 5 resultados ordenados por fecha/hora
-**Autenticación y seguridad** JWT en la API + login en Blazor. Roles: Recepcionista, Médico, Admin 
 **Manejo formal de errores HTTP** Middleware global de excepciones + códigos 400/404/409 consistentes con mensajes en español
-**Módulo de validaciones centralizado** Extraer todas las reglas de agendar cita a un `CitaValidationService` o un stored procedure unificado
 **Pruebas unitarias para CRUD** Agregar tests para `MedicoService` y `PacientesService` cubriendo altas, ediciones y eliminaciones
 **Modales y validaciones de formulario** Reemplazar `alert()` de JavaScript por modales Blazor y atributos `[Required]` /`DataAnnotationsValidator` 
 **Proyecto Shared** Proyecto para compartir modelos y DTOs entre API y UI, evitando duplicación de clases como `MedicoDto`, `PacienteDto`, etc.
